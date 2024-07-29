@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Blockchain API</title>
+</head>
+<body>
+    <h1>Bitcoin Adresse Info</h1>
+    <form id="address-form">
+        <label for="address">Bitcoin Adresse:</label>
+        <input type="text" id="address" name="address" required>
+        <button type="submit">Abrufen</button>
+    </form>
+    <h2>Ergebnisse</h2>
+    <div id="results"></div>
+    
+    <h1>Bitcoin senden</h1>
+    <form id="send-form">
+        <label for="send-to-address">An Adresse senden:</label>
+        <input type="text" id="send-to-address" name="send-to-address" required>
+        <label for="amount">Betrag (BTC):</label>
+        <input type="text" id="amount" name="amount" required>
+        <button type="submit">Senden</button>
+    </form>
+    <div id="send-results"></div>
+
+    <script>
+        document.getElementById('address-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const address = document.getElementById('address').value;
+            const url = `https://blockchain.info/rawaddr/${address}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <p>Adresse: ${data.address}</p>
+                        <p>Saldo: ${data.final_balance / 100000000} BTC</p>
+                        <p>Anzahl der Transaktionen: ${data.n_tx}</p>
+                    `;
+                })
+                .catch(error => {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `<p>Fehler: ${error.message}</p>`;
+                });
+        });
+
+        document.getElementById('send-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const sendToAddress = document.getElementById('send-to-address').value;
+            const amount = document.getElementById('amount').value;
+            const sendData = { sendToAddress, amount };
+            
+            fetch('/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(sendData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const sendResultsDiv = document.getElementById('send-results');
+                sendResultsDiv.innerHTML = `<p>${data.message}</p>`;
+            })
+            .catch(error => {
+                const sendResultsDiv = document.getElementById('send-results');
+                sendResultsDiv.innerHTML = `<p>Fehler: ${error.message}</p>`;
+            });
+        });
+    </script>
+</body>
+</html>
